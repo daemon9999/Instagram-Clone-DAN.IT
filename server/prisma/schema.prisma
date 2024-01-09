@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  fullName  String
+  username  String   @unique
+  password  String
+  bio       String?
+  avatar    String?
+  createdAt DateTime @default(now())
+
+  posts Post[] @relation("UserPosts")
+
+  followingIds     String[] @default([])
+  followerIds      String[] @default([])
+
+  comments Comment[] @relation("UserComments")
+  postLikes PostLike[] @relation("UserLikes")
+  postFavorites PostFavorite[] @relation("UserFavorites")
+}
+
+model Post {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  imageUrl  String
+  caption   String?
+  location  String?
+  createdAt DateTime @default(now())
+  user      User     @relation("UserPosts", fields: [userId], references: [id])
+  userId    String   @db.ObjectId
+  comments Comment[] @relation("PostComments")
+  likes PostLike[] @relation("PostLikes")
+  favorites PostFavorite[] @relation("PostFavorites")
+  
+}
+
+
+
+model Comment {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  content String 
+  user User @relation("UserComments", fields: [userId], references: [id])
+  userId String @db.ObjectId
+  post Post @relation("PostComments", fields: [postId], references: [id])
+  postId String @db.ObjectId
+  createdAt DateTime @default(now())
+}
+
+model PostLike {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  postId String @db.ObjectId   
+  post Post @relation("PostLikes", fields: [postId], references: [id])
+  user User @relation("UserLikes", fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+
+model PostFavorite {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  postId String @db.ObjectId   
+  post Post @relation("PostFavorites", fields: [postId], references: [id])
+  user User @relation("UserFavorites", fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
